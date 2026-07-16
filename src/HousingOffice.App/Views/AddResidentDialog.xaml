@@ -1,0 +1,36 @@
+<Window x:Class="HousingOffice.Views.AddResidentDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ավելացնել բնակիչ"
+        Height="420" Width="500"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFont}" FontSize="14"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Անուն, ազգանուն *" FontWeight="Bold"/>
+        <TextBox Grid.Row="1" x:Name="NameBox" Margin="0,4,0,12" Padding="6,4" Style="{StaticResource SearchBox}"/>
+
+        <TextBlock Grid.Row="2" Text="Ընդհ. քառ. մետր" FontWeight="Bold"/>
+        <TextBox Grid.Row="3" x:Name="SquareBox" Margin="0,4,0,12" Padding="6,4" Style="{StaticResource SearchBox}"/>
+
+        <TextBlock Grid.Row="4" Text="Դեբիտորական պարտք" FontWeight="Bold"/>
+        <TextBox Grid.Row="5" x:Name="DebitBox" Text="0" Margin="0,4,0,12" Padding="6,4" Style="{StaticResource SearchBox}"/>
+
+        <TextBlock Grid.Row="6" Text="Ամսական հաշվարկ" FontWeight="Bold"/>
+        <TextBox Grid.Row="7" x:Name="ChargeBox" Text="0" Margin="0,4,0,12" Padding="6,4" Style="{StaticResource SearchBox}"/>
+
+        <StackPanel Grid.Row="9" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Չեղարկել" Style="{StaticResource ToolbarButtonSecondary}" Click="Cancel_Click" MinWidth="100"/>
+            <Button Content="Ավելացնել" Style="{StaticResource ToolbarButton}" Click="Ok_Click" MinWidth="100"/>
+        </StackPanel>
+    </Grid>
+</Window>
