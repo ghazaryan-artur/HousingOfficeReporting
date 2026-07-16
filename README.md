@@ -1,34 +1,36 @@
 # HousingOffice — Համատիրության հաշվառում
 
-WPF-приложение (.NET 8) для ведения отчётности ЖЭК-а. Замена ручного Excel-файла `hamatirutyun2020.xlsm` с сохранением привычного вида таблиц и без риска случайно испортить формулы.
+A WPF application (.NET 8) for housing office (ЖЭК / համատիրություն) bookkeeping. A replacement for the manual Excel file `hamatirutyun2020.xlsm` that preserves the familiar look of the spreadsheet while removing the risk of accidentally breaking a formula.
 
-## Что умеет
+The UI is in Armenian; this README is in English.
 
-- Список домов слева, таблица жильцов справа — вид максимально повторяет исходный Excel
-- Колонки **Ընդանուր** и **Վերջնական մնացորդ** — read-only, считаются программой; изменить формулу невозможно
-- Кнопки «➕ Ավելացնել տուն» и «👤 Ավելացնել բնակիչ» с подтверждением
-- Поиск по домам (левая панель)
-- Автосохранение (debounce 2 сек + heartbeat каждые 5 мин)
-- История: снапшот SQLite после каждого сохранения в `%LocalAppData%\HousingOffice\history\`, авточистка через 2 дня
-- Импорт из `.xlsm`/`.xlsx` (кнопка **📥 Ներմուծել Excel**) — можно взять исходный файл ЖЭК-а
-- Экспорт в `.xlsx` (кнопка **📤 Արտահանել Excel**) — восстанавливает формулы SUM/итогов
-- Навигация по годам: маленькая кнопка `📅 2020 ▾` в правом верхнем углу, каждый год — отдельная БД `data_YYYY.db`
-- Один `.exe`, никаких консольных команд для запуска
+## Features
 
-## Где что хранится
+- List of houses on the left, residents table on the right — the layout mirrors the original Excel as closely as possible
+- The **Ընդանուր** and **Վերջնական մնացորդ** columns are read-only and computed by the app; there is no formula the user can break
+- **➕ Ավելացնել տուն** and **👤 Ավելացնել բնակիչ** buttons with confirmation dialogs
+- Search over houses (left panel)
+- Auto-save (2 s debounce plus a 5-minute heartbeat)
+- History: a SQLite snapshot is written after every save to `%LocalAppData%\HousingOffice\history\`, auto-cleaned after 2 days
+- Import from `.xlsm` / `.xlsx` (**📥 Ներմուծել Excel** button) — you can feed the original housing-office file in directly
+- Export to `.xlsx` (**📤 Արտահանել Excel** button) — restores the SUM / total formulas
+- Year navigation: a small `📅 2020 ▾` button in the top-right corner; each year is a separate database file `data_YYYY.db`
+- Single `.exe`, no console commands required to launch
+
+## Where data is stored
 
 `%LocalAppData%\HousingOffice\`
 ```
-data_2020.db       ← основная БД года
+data_2020.db       ← main database for the year
 data_2021.db
-history\           ← снапшоты за последние 2 дня
+history\           ← snapshots from the last 2 days
     data_2020__2026-07-15_10-42-11.db
     ...
 ```
 
-## Сборка (на Windows)
+## Build (on Windows)
 
-Требуется [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ```powershell
 git clone <repo>
@@ -36,16 +38,16 @@ cd HousingOfficeReporting
 ./publish.ps1
 ```
 
-Готовый `publish\HousingOffice.exe` (~70 МБ) можно скопировать на целевой компьютер — .NET Runtime ставить не нужно (self-contained).
+The resulting `publish\HousingOffice.exe` (~70 MB) can be copied to the target machine as-is — no .NET Runtime install is needed (self-contained).
 
-## Первый запуск
+## First run
 
-1. Запустить `HousingOffice.exe` двойным кликом.
-2. Появится пустое окно с подсказкой «Դատարկ բազա — սեղմեք 📥 Ներմուծել Excel».
-3. Нажать **📥 Ներմուծել Excel**, выбрать `hamatirutyun2020.xlsm` — все дома импортируются в SQLite.
-4. Дальше работать в приложении. Excel больше не нужен.
+1. Launch `HousingOffice.exe` by double-clicking it.
+2. An empty window appears with the hint «Դատարկ բազա — սեղմեք 📥 Ներմուծել Excel».
+3. Click **📥 Ներմուծել Excel**, pick `hamatirutyun2020.xlsm` — all houses are imported into SQLite.
+4. From then on, work inside the app. Excel is no longer needed.
 
-## Структура проекта
+## Project layout
 
 ```
 src/HousingOffice.App/
@@ -53,14 +55,14 @@ src/HousingOffice.App/
     Services/                   ← DatabaseService, XlsmService, AutoSaveService, HistoryService, AppPaths
     ViewModels/                 ← MainViewModel, ResidentRowViewModel, HouseListItem
     Views/                      ← AddHouseDialog, AddResidentDialog, NewYearDialog
-    MainWindow.xaml             ← главное окно (тулбар, боковой список, DataGrid)
-    App.xaml                    ← стили кнопок/грида
+    MainWindow.xaml             ← main window (toolbar, side list, DataGrid)
+    App.xaml                    ← button / grid styles
     HousingOffice.App.csproj
-publish.ps1                     ← сборка single-file exe
-hamatirutyun2020.xlsm           ← исходный файл (для первого импорта)
+publish.ps1                     ← builds the single-file exe
+hamatirutyun2020.xlsm           ← source file (for the initial import)
 ```
 
-## Разработка на Windows
+## Development on Windows
 
 ```powershell
 dotnet restore src/HousingOffice.App
