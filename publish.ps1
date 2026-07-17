@@ -17,5 +17,5 @@ dotnet publish $proj `
     -o $out
 
 Write-Host ""
-Write-Host "Готово. Файл: $out\HousingOffice.exe" -ForegroundColor Green
-Write-Host "Скопируйте эту папку на целевой компьютер и запускайте HousingOffice.exe двойным кликом." -ForegroundColor Green
+Write-Host "Done. Output: $out\HousingOffice.exe" -ForegroundColor Green
+Write-Host "Copy this folder to the target machine and double-click HousingOffice.exe to run." -ForegroundColor Green
