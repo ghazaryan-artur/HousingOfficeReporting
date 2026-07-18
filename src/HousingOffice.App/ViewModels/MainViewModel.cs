@@ -32,6 +32,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private int currentMonth = 12;
     [ObservableProperty] private string statusText = "";
     [ObservableProperty] private bool isYearPickerOpen;
+    [ObservableProperty] private bool isActionsMenuOpen;
+    [ObservableProperty] private bool isHousePickerOpen;
 
     public MainViewModel()
     {
@@ -99,7 +101,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         ReloadHouses();
         StatusText = Houses.Count == 0
-            ? $"Տարի {year} • Դատարկ բազա — սեղմեք 📥 Ներմուծել Excel"
+            ? $"Տարի {year} • Դատարկ բազա — ներմուծեք Excel-ից ⚙ ներքևի աջ անկյան միջոցով"
             : $"Տարի {year} • {Houses.Count} տուն";
     }
 
@@ -180,6 +182,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void DeleteHouse()
     {
+        IsActionsMenuOpen = false;
         if (SelectedHouse == null) return;
         var res = System.Windows.MessageBox.Show(
             $"Հեռացնե՞լ ամբողջ տունը «{SelectedHouse.DisplayName}» բոլոր բնակիչներով?",
@@ -193,6 +196,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ImportXlsm()
     {
+        IsActionsMenuOpen = false;
         var ofd = new Microsoft.Win32.OpenFileDialog
         {
             Filter = "Excel workbook (*.xlsm;*.xlsx)|*.xlsm;*.xlsx",
@@ -221,6 +225,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ExportXlsm()
     {
+        IsActionsMenuOpen = false;
         var sfd = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel workbook (*.xlsx)|*.xlsx",
@@ -240,6 +245,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void OpenYearPicker() => IsYearPickerOpen = true;
+
+    [RelayCommand]
+    private void OpenActionsMenu() => IsActionsMenuOpen = true;
+
+    [RelayCommand]
+    private void OpenHousePicker() => IsHousePickerOpen = true;
+
+    [RelayCommand]
+    private void PickHouse(HouseListItem house)
+    {
+        IsHousePickerOpen = false;
+        SelectedHouse = house;
+    }
 
     [RelayCommand]
     private void PickYear(int year)

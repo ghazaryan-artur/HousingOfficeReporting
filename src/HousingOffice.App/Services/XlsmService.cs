@@ -69,6 +69,7 @@ public sealed class XlsmService
                 CreditDebt = ReadDouble(sheet, row, 6),
                 MonthlyCharge = ReadDouble(sheet, row, 7),
                 DiscountAmount = ReadDouble(sheet, row, 21),
+                Note = sheet.Cell(row, 23).GetString().Trim() is { Length: > 0 } note ? note : null,
             };
             for (int i = 0; i < 12; i++)
                 r.Payments[i] = ReadDouble(sheet, row, 8 + i);
@@ -145,6 +146,7 @@ public sealed class XlsmService
                 for (int i = 0; i < 12; i++)
                     if (r.Payments[i] != 0) sheet.Cell(row, 8 + i).Value = r.Payments[i];
                 if (r.DiscountAmount != 0) sheet.Cell(row, 21).Value = r.DiscountAmount;
+                if (!string.IsNullOrWhiteSpace(r.Note)) sheet.Cell(row, 23).Value = r.Note;
                 sheet.Cell(row, 20).FormulaA1 = $"SUM(H{row}:S{row})";
                 sheet.Cell(row, 22).FormulaA1 = $"E{row}-F{row}+(G{row}*'{ListSheetName}'!$D$2)-T{row}-U{row}";
                 row++;
@@ -171,5 +173,6 @@ public sealed class XlsmService
         sheet.Cell("T1").Value = "Ընդանուր";
         sheet.Cell("U1").Value = "Զիջվող գումար";
         sheet.Cell("V1").Value = "Վերջնական մնացորդ";
+        sheet.Cell("W1").Value = "Նշում";
     }
 }

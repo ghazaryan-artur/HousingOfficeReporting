@@ -80,6 +80,16 @@ CREATE TABLE IF NOT EXISTS residents (
 CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number);
 ";
         cmd.ExecuteNonQuery();
+
+        using var pragma = c.CreateCommand();
+        pragma.CommandText = "SELECT COUNT(*) FROM pragma_table_info('residents') WHERE name='note'";
+        var hasNote = (long)pragma.ExecuteScalar()! > 0;
+        if (!hasNote)
+        {
+            using var alter = c.CreateCommand();
+            alter.CommandText = "ALTER TABLE residents ADD COLUMN note TEXT";
+            alter.ExecuteNonQuery();
+        }
     }
 
     public YearSettings LoadSettings()
@@ -157,7 +167,7 @@ CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number)
         using var cmd = c.CreateCommand();
         cmd.CommandText = @"SELECT id, house_id, row_number, full_name, share_raw, square_meters,
                                     debit_debt, credit_debt, monthly_charge, discount_amount,
-                                    p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12
+                                    p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12, note
                              FROM residents WHERE house_id=$h ORDER BY row_number";
         cmd.Parameters.AddWithValue("$h", houseId);
         var list = new List<Resident>();
@@ -178,6 +188,7 @@ CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number)
                 DiscountAmount = r.GetDouble(9),
             };
             for (int i = 0; i < 12; i++) resident.Payments[i] = r.GetDouble(10 + i);
+            resident.Note = r.IsDBNull(22) ? null : r.GetString(22);
             list.Add(resident);
         }
         return list;
@@ -215,7 +226,8 @@ CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number)
                                 full_name=$name, share_raw=$share, square_meters=$sq,
                                 debit_debt=$d, credit_debt=$cr, monthly_charge=$m, discount_amount=$disc,
                                 p1=$p1,p2=$p2,p3=$p3,p4=$p4,p5=$p5,p6=$p6,
-                                p7=$p7,p8=$p8,p9=$p9,p10=$p10,p11=$p11,p12=$p12
+                                p7=$p7,p8=$p8,p9=$p9,p10=$p10,p11=$p11,p12=$p12,
+                                note=$note
                             WHERE id=$id";
         cmd.Parameters.AddWithValue("$id", r.Id);
         cmd.Parameters.AddWithValue("$name", r.FullName);
@@ -227,6 +239,7 @@ CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number)
         cmd.Parameters.AddWithValue("$disc", r.DiscountAmount);
         for (int i = 0; i < 12; i++)
             cmd.Parameters.AddWithValue($"$p{i + 1}", r.Payments[i]);
+        cmd.Parameters.AddWithValue("$note", (object?)r.Note ?? System.DBNull.Value);
         cmd.ExecuteNonQuery();
     }
 
@@ -262,9 +275,9 @@ CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number)
                 ir.Transaction = tx;
                 ir.CommandText = @"INSERT INTO residents(house_id,row_number,full_name,share_raw,square_meters,
                                         debit_debt,credit_debt,monthly_charge,discount_amount,
-                                        p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12)
+                                        p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,note)
                                    VALUES($h,$rn,$fn,$sh,$sq,$d,$cr,$m,$disc,
-                                          $p1,$p2,$p3,$p4,$p5,$p6,$p7,$p8,$p9,$p10,$p11,$p12)";
+                                          $p1,$p2,$p3,$p4,$p5,$p6,$p7,$p8,$p9,$p10,$p11,$p12,$note)";
                 ir.Parameters.AddWithValue("$h", houseId);
                 ir.Parameters.AddWithValue("$rn", r.RowNumber);
                 ir.Parameters.AddWithValue("$fn", r.FullName);
@@ -276,6 +289,7 @@ CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number)
                 ir.Parameters.AddWithValue("$disc", r.DiscountAmount);
                 for (int i = 0; i < 12; i++)
                     ir.Parameters.AddWithValue($"$p{i + 1}", r.Payments[i]);
+                ir.Parameters.AddWithValue("$note", (object?)r.Note ?? System.DBNull.Value);
                 ir.ExecuteNonQuery();
             }
         }

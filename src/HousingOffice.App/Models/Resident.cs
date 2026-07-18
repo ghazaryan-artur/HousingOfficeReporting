@@ -13,6 +13,7 @@ public sealed class Resident
     public double CreditDebt { get; set; }
     public double MonthlyCharge { get; set; }
     public double DiscountAmount { get; set; }
+    public string? Note { get; set; }
 
     public double[] Payments { get; set; } = new double[12];
 

@@ -38,6 +38,8 @@ public partial class ResidentRowViewModel : ObservableObject
     public double MonthlyCharge { get => Model.MonthlyCharge; set { SetProp(v => Model.MonthlyCharge = v, value); OnPropertyChanged(nameof(FinalBalance)); } }
     public double DiscountAmount { get => Model.DiscountAmount; set { SetProp(v => Model.DiscountAmount = v, value); OnPropertyChanged(nameof(FinalBalance)); } }
 
+    public string? Note { get => Model.Note; set => SetProp(v => Model.Note = v, value); }
+
     public double P1 { get => Model.Payments[0]; set => SetPayment(0, value); }
     public double P2 { get => Model.Payments[1]; set => SetPayment(1, value); }
     public double P3 { get => Model.Payments[2]; set => SetPayment(2, value); }
