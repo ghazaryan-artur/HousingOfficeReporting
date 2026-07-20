@@ -1,83 +1,83 @@
 # CLAUDE.md
 
-Контекст для Claude Code. Кратко о проекте, где что лежит, как собирать, что уже сделано и что осталось проверить.
+Context for Claude Code. A short overview of the project, where things live, how to build, what's done, and what still needs verification.
 
-## О проекте
+## About the project
 
-Десктоп-приложение (WPF, .NET 8) для ЖЭК-а — замена ручного Excel-файла `hamatirutyun2020.xlsm` с сохранением привычного вида и без риска испортить формулы. Интерфейс на армянском (пользователь — взрослый, не технарь). Оригинальный xlsm лежит в корне, из него импортируются данные при первом запуске.
+Desktop application (WPF, .NET 8) for a housing office (ЖЭК) — a replacement for the manual Excel file `hamatirutyun2020.xlsm` that keeps the familiar look and carries no risk of breaking formulas. The UI is in Armenian (the user is an adult, non-technical). The original xlsm sits in the repo root and its data is imported on first launch.
 
-**Пользователь:** пишет по-русски, но приложение и все тексты в UI — на армянском. Не переводить UI-строки без явной просьбы.
+**User:** communicates in Russian, but the application and all UI text are in Armenian. Do not translate UI strings without an explicit request.
 
-## Стек и зависимости
+## Stack and dependencies
 
 - **.NET 8** (`net8.0-windows`), **WPF**
-- **ClosedXML 0.104** — чтение/запись xlsm/xlsx (в исходнике VBA нет, поэтому экспорт в xlsx — без потерь)
-- **Microsoft.Data.Sqlite 8** — рабочее хранилище (одна БД на год)
+- **ClosedXML 0.104** — reads/writes xlsm/xlsx (the source file has no VBA, so exporting to xlsx is lossless)
+- **Microsoft.Data.Sqlite 8** — working storage (one database per year)
 - **CommunityToolkit.Mvvm 8.3** — `[ObservableProperty]`, `[RelayCommand]`
 
-## Раскладка проекта
+## Project layout
 
 ```
 src/HousingOffice.App/
   Models/            House.cs, Resident.cs, YearSettings.cs
   Services/          DatabaseService.cs   ← SQLite CRUD + BulkImport
-                     XlsmService.cs       ← Import/Export ClosedXML
+                     XlsmService.cs       ← Import/Export via ClosedXML
                      AutoSaveService.cs   ← DispatcherTimer debounce + heartbeat
-                     HistoryService.cs    ← снапшоты .db, ротация 2 дня
+                     HistoryService.cs    ← .db snapshots, 2-day rotation
                      AppPaths.cs          ← %LocalAppData%\HousingOffice
   ViewModels/        MainViewModel.cs, ResidentRowViewModel.cs, HouseListItem.cs
-  Views/             AddHouseDialog, AddResidentDialog, NewYearDialog (все — Window)
-  MainWindow.xaml    ← тулбар + список домов слева + DataGrid + status bar
-  App.xaml           ← стили кнопок, DataGrid, шрифт
+  Views/             AddHouseDialog, AddResidentDialog, NewYearDialog (all — Window)
+  MainWindow.xaml    ← toolbar + house list on the left + DataGrid + status bar
+  App.xaml           ← button styles, DataGrid, font
   HousingOffice.App.csproj
 publish.ps1
-hamatirutyun2020.xlsm   ← исходник для первого импорта
+hamatirutyun2020.xlsm   ← source file for the initial import
 ```
 
-Данные пользователя: `%LocalAppData%\HousingOffice\data_YYYY.db` + `history\`.
+User data: `%LocalAppData%\HousingOffice\data_YYYY.db` + `history\`.
 
-## Сборка / запуск (Windows)
+## Build / run (Windows)
 
 ```powershell
-# отладка
+# debug
 dotnet run --project src/HousingOffice.App
 
-# релиз single-file exe
+# release single-file exe
 ./publish.ps1
 # → publish\HousingOffice.exe (~70 MB, self-contained win-x64)
 ```
 
-## Ключевые проектные решения (не менять без причины)
+## Key project decisions (don't change without a reason)
 
-- **Формулы не хранятся, а вычисляются в C#.** Read-only колонки в DataGrid: `PaidTotal` (=SUM платежей) и `FinalBalance` (=E−F+G·currentMonth−T−U). Это буквальное выполнение п.1 требований — пользователь не может испортить формулу, потому что её просто нет в UI.
-- **Один SQLite-файл на год** (`data_2020.db`, `data_2021.db`, ...). Переключение года = переоткрытие БД. Так проще, чем один файл с колонкой year.
-- **Автосейв:** `AutoSaveService` — debounce 2 сек после последнего изменения, плюс heartbeat каждые 5 мин. `_dirtyResidents` — HashSet ID, флашится в `FlushDirty()`.
-- **История:** после каждого флаша `HistoryService.Snapshot()` копирует .db в `history/data_YYYY__stamp.db`, старше 2 дней удаляется.
-- **Год-пикер:** маленькая кнопка `📅 2020 ▾` в правом верхнем углу — не hover (пожилые пользователи, случайные срабатывания), а явный клик → Popup.
-- **Импорт xlsm затирает год целиком** (`BulkImport` делает `DELETE FROM ...` в транзакции). Перед импортом — MessageBox с предупреждением и снапшот в history.
+- **Formulas are not stored, they're computed in C#.** Read-only DataGrid columns: `PaidTotal` (=SUM of payments) and `FinalBalance` (=E−F+G·currentMonth−T−U). This is a literal implementation of requirement #1 — the user can't break a formula because there is no formula in the UI to break.
+- **One SQLite file per year** (`data_2020.db`, `data_2021.db`, ...). Switching years means reopening the database. Simpler than a single file with a year column.
+- **Autosave:** `AutoSaveService` — 2-second debounce after the last edit, plus a heartbeat every 5 minutes. `_dirtyResidents` is a HashSet of IDs, flushed in `FlushDirty()`.
+- **History:** after every flush, `HistoryService.Snapshot()` copies the .db to `history/data_YYYY__stamp.db`; anything older than 2 days is deleted.
+- **Year picker:** a small `📅 2020 ▾` button in the top-right corner — not hover-triggered (older users, accidental triggers), an explicit click opens a Popup instead.
+- **Importing an xlsm wipes the whole year** (`BulkImport` runs `DELETE FROM ...` inside a transaction). Before importing, show a MessageBox warning and take a history snapshot.
 
-## Что НЕ протестировано (собрано на macOS без dotnet)
+## What hasn't been tested (this was assembled on macOS without dotnet)
 
-Первое, что стоит сделать в новой сессии на Windows — прогнать сборку и запуск, потому что WPF я тут не мог проверить визуально:
+The first thing to do in a new session on Windows is run the build and launch the app, since WPF couldn't be visually verified here:
 
-1. `dotnet restore src/HousingOffice.App` — проверить, что все пакеты подтягиваются.
-2. `dotnet build` — поймать компиляторные ошибки (могут быть в bindings XAML).
-3. `dotnet run` — открыть, нажать 📥 Ներմուծել Excel, выбрать `hamatirutyun2020.xlsm`, проверить что 60 домов появились в сайдбаре.
-4. Отредактировать ячейку `Մուտք 5` у любого жильца — через 2 сек в статус-баре должно появиться `Ավտոպահպանված HH:MM`, колонки `Ընդանուր` и `Վերջն. մնացորդ` должны пересчитаться.
-5. Проверить попап года (правый верхний угол) — открывается по клику, закрывается по клику вне.
-6. Экспорт → открыть в Excel → убедиться, что формулы SUM/итога подставились.
+1. `dotnet restore src/HousingOffice.App` — check that all packages resolve.
+2. `dotnet build` — catch compiler errors (may be in XAML bindings).
+3. `dotnet run` — open the app, click 📥 Ներմուծել Excel, select `hamatirutyun2020.xlsm`, verify that 60 houses appear in the sidebar.
+4. Edit the `Մուտք 5` cell for any resident — after 2 seconds the status bar should show `Ավտոպահպանված HH:MM`, and the `Ընդանուր` and `Վերջն. մնացորդ` columns should recalculate.
+5. Check the year popup (top-right corner) — opens on click, closes on click outside.
+6. Export → open in Excel → confirm the SUM/total formulas were inserted.
 
-Возможные подводные камни, за которыми стоит следить:
-- `Popup` с `PlacementTarget="{Binding ElementName=YearButton}"` и внутренние привязки `ElementName=YearPopup` — WPF иногда капризничает с namescope у Popup; если команды в попапе не срабатывают, это первое место.
-- `ComboBox SelectedItem="{Binding CurrentMonth}"` с `x:Array` Int32-элементов — обычно работает, но если нет — заменить на `SelectedValue`/`SelectedValuePath`.
-- Колонки DataGrid узкие (60px для месячных платежей) — армянские заголовки длинные, могут не влезать; проверить визуально.
+Possible pitfalls to watch for:
+- `Popup` with `PlacementTarget="{Binding ElementName=YearButton}"` and internal bindings via `ElementName=YearPopup` — WPF can be finicky about Popup namescopes; if commands inside the popup don't fire, check here first.
+- `ComboBox SelectedItem="{Binding CurrentMonth}"` bound to an `x:Array` of Int32 elements — usually works, but if not, switch to `SelectedValue`/`SelectedValuePath`.
+- DataGrid columns are narrow (60px for monthly payments) — Armenian headers are long and may not fit; check visually.
 
-## Скилл `verify`
+## The `verify` skill
 
-После нетривиальных правок кода — прогонять `verify` (запуск приложения и проверка сценария глазами), а не только build/typecheck. WPF-баги живут в биндингах и не ловятся компилятором.
+After non-trivial code changes, run `verify` (launch the app and check the scenario visually) rather than relying only on build/typecheck. WPF bugs live in bindings and aren't caught by the compiler.
 
-## Как продолжать
+## How to proceed
 
-Если пользователь просит добавить фичу — сначала посмотреть, не нарушает ли она п.1 требований (формулы неизменяемы). Всё, что меняет вычисляемое значение — только через изменение исходных полей, не через новые «формулы в клетках».
+If the user asks for a new feature, first check whether it violates requirement #1 (formulas must remain immutable). Anything that changes a computed value must go through editing the source fields, not through new "formulas in cells."
 
-Если пользователь просит поменять UI — держаться максимально близко к виду Excel (те же заголовки колонок армянскими буквами, тот же порядок, крупный шрифт, явные кнопки). Целевая аудитория — не технари.
+If the user asks for a UI change, stay as close as possible to the original Excel look (same column headers in Armenian, same order, large font, explicit buttons). The target audience is non-technical.

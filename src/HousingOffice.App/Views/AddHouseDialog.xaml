@@ -28,7 +28,7 @@
         <TextBlock Grid.Row="4" Text="Ամբողջ անվանում (կրկնվող չլինի)" FontWeight="Bold"/>
         <TextBox Grid.Row="5" x:Name="NameBox" Margin="0,4,0,8" Padding="6,4" Style="{StaticResource SearchBox}"/>
 
-        <TextBlock Grid.Row="6" TextWrapping="Wrap" Foreground="#6c757d" FontSize="12"
+        <TextBlock Grid.Row="6" TextWrapping="Wrap" Foreground="#5c7a67" FontSize="12"
                    Text="Անվանում որպես Excel-ում՝ '_' կիրառելով, օր. Մոլդովական_1"/>
 
         <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">

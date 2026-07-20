@@ -32,7 +32,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private int currentMonth = 12;
     [ObservableProperty] private string statusText = "";
     [ObservableProperty] private bool isYearPickerOpen;
-    [ObservableProperty] private bool isActionsMenuOpen;
     [ObservableProperty] private bool isHousePickerOpen;
 
     public MainViewModel()
@@ -54,6 +53,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     partial void OnHousesFilterChanged(string value) => HousesView.Refresh();
+
+    partial void OnIsHousePickerOpenChanged(bool value)
+    {
+        if (!value) HousesFilter = "";
+    }
 
     partial void OnSelectedHouseChanged(HouseListItem? value)
     {
@@ -101,7 +105,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         ReloadHouses();
         StatusText = Houses.Count == 0
-            ? $"Տարի {year} • Դատարկ բազա — ներմուծեք Excel-ից ⚙ ներքևի աջ անկյան միջոցով"
+            ? $"Տարի {year} • Դատարկ բազա — ներմուծեք Excel-ից 🔒 Խմբագրման ռեժիմ կոճակի միջոցով"
             : $"Տարի {year} • {Houses.Count} տուն";
     }
 
@@ -122,13 +126,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (SelectedHouse == null) return;
         var currentMonthProvider = new Func<int>(() => CurrentMonth);
         foreach (var r in _db.ListResidents(SelectedHouse.Id))
-            Residents.Add(new ResidentRowViewModel(r, currentMonthProvider, MarkDirty));
+            Residents.Add(new ResidentRowViewModel(r, currentMonthProvider, MarkDirty, LogFieldChange));
     }
 
     private void MarkDirty(ResidentRowViewModel r)
     {
         _dirtyResidents.Add(r.Id);
         _autoSave.MarkDirty();
+    }
+
+    private void LogFieldChange(ResidentRowViewModel r, string columnKey, string? oldValue, string? newValue)
+    {
+        if (SelectedHouse == null) return;
+        _db.LogChange(r.Id, SelectedHouse.Id, r.FullName, SelectedHouse.DisplayName,
+            columnKey, ResidentFieldLabels.Label(columnKey), oldValue, newValue);
     }
 
     private void FlushDirty()
@@ -182,7 +193,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void DeleteHouse()
     {
-        IsActionsMenuOpen = false;
         if (SelectedHouse == null) return;
         var res = System.Windows.MessageBox.Show(
             $"Հեռացնե՞լ ամբողջ տունը «{SelectedHouse.DisplayName}» բոլոր բնակիչներով?",
@@ -196,7 +206,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ImportXlsm()
     {
-        IsActionsMenuOpen = false;
         var ofd = new Microsoft.Win32.OpenFileDialog
         {
             Filter = "Excel workbook (*.xlsm;*.xlsx)|*.xlsm;*.xlsx",
@@ -225,7 +234,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void ExportXlsm()
     {
-        IsActionsMenuOpen = false;
         var sfd = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Excel workbook (*.xlsx)|*.xlsx",
@@ -244,13 +252,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void OpenYearPicker() => IsYearPickerOpen = true;
+    private void OpenChangeHistory()
+    {
+        var dlg = new ChangeHistoryDialog(_db);
+        dlg.ShowDialog();
+        LoadResidents();
+    }
 
     [RelayCommand]
-    private void OpenActionsMenu() => IsActionsMenuOpen = true;
+    private void OpenEditMode()
+    {
+        var res = System.Windows.MessageBox.Show(
+            "Մուտք գործե՞լ խմբագրման հատուկ ռեժիմ:\nԱյստեղ կարող եք ավելացնել/հեռացնել տներ և ներմուծել/արտահանել Excel ֆայլեր:",
+            "Հաստատում", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+        if (res != System.Windows.MessageBoxResult.Yes) return;
+        var dlg = new EditModeDialog(this);
+        dlg.ShowDialog();
+    }
 
     [RelayCommand]
-    private void OpenHousePicker() => IsHousePickerOpen = true;
+    private void OpenYearPicker() => IsYearPickerOpen = !IsYearPickerOpen;
+
+    [RelayCommand]
+    private void OpenHousePicker() => IsHousePickerOpen = !IsHousePickerOpen;
 
     [RelayCommand]
     private void PickHouse(HouseListItem house)

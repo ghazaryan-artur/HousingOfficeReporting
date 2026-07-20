@@ -17,7 +17,7 @@
 
         <TextBlock Grid.Row="0" Text="Ինչ տարվա համար ստեղծել նոր տվյալների բազա?" TextWrapping="Wrap" FontWeight="Bold"/>
         <TextBox Grid.Row="1" x:Name="YearBox" Margin="0,10,0,4" Padding="6,4" Style="{StaticResource SearchBox}"/>
-        <TextBlock Grid.Row="2" Foreground="#6c757d" FontSize="12" TextWrapping="Wrap"
+        <TextBlock Grid.Row="2" Foreground="#5c7a67" FontSize="12" TextWrapping="Wrap"
                    Text="Ընթացիկ տարվա տվյալները չեն փոխանցվի — նոր տարին սկսում է դատարկ բազայով:"/>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">

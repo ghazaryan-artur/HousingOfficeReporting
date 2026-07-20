@@ -1,6 +1,6 @@
 # HousingOffice — Համատիրության հաշվառում
 
-A WPF application (.NET 8) for housing office (ЖЭК / համատիրություն) bookkeeping. A replacement for the manual Excel file `hamatirutyun2020.xlsm` that preserves the familiar look of the spreadsheet while removing the risk of accidentally breaking a formula.
+A WPF application (.NET 8) for housing office (համատիրություն) bookkeeping. A replacement for the manual Excel file `hamatirutyun2020.xlsm` that preserves the familiar look of the spreadsheet while removing the risk of accidentally breaking a formula.
 
 The UI is in Armenian; this README is in English.
 

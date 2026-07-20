@@ -1,0 +1,45 @@
+<Window x:Class="HousingOffice.Views.EditModeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Խմբագրման ռեժիմ"
+        Height="460" Width="440"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFont}" FontSize="14"
+        ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="🔒  Խմբագրման ռեժիմ" FontSize="20" FontWeight="Bold" Foreground="#c69500"/>
+        <TextBlock Grid.Row="1" Text="Կառուցվածքային փոփոխություններ և Excel փոխանակում" FontSize="12" Foreground="#5c7a67" Margin="0,2,0,10"/>
+        <TextBlock Grid.Row="2" Margin="0,0,0,16" FontSize="13" Foreground="#3d5a48">
+            <Run Text="Ընտրված տուն՝ "/>
+            <Run Text="{Binding SelectedHouse.DisplayName, FallbackValue='—'}" FontWeight="Bold"/>
+        </TextBlock>
+
+        <Button Grid.Row="3" Content="➕  Ավելացնել տուն" Style="{StaticResource ToolbarButton}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,8"
+                Command="{Binding AddHouseCommand}"/>
+        <Button Grid.Row="4" Content="📥  Ներմուծել Excel" Style="{StaticResource ToolbarButtonSecondary}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,8"
+                Command="{Binding ImportXlsmCommand}"/>
+        <Button Grid.Row="5" Content="📤  Արտահանել Excel" Style="{StaticResource ToolbarButtonSecondary}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="14,10" Margin="0,0,0,8"
+                Command="{Binding ExportXlsmCommand}"/>
+        <Button Grid.Row="6" Content="🗑  Հեռացնել ընտրված տունը" Style="{StaticResource ToolbarButtonDanger}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="14,10"
+                Command="{Binding DeleteHouseCommand}"/>
+
+        <Button Grid.Row="8" Content="Փակել" Style="{StaticResource ToolbarButtonSecondary}"
+                HorizontalAlignment="Right" MinWidth="110" Margin="0,16,0,0" Click="Close_Click"/>
+    </Grid>
+</Window>

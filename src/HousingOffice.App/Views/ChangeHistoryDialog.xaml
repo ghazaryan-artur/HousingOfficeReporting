@@ -1,0 +1,123 @@
+<Window x:Class="HousingOffice.Views.ChangeHistoryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Փոփոխություններ"
+        Height="640" Width="1100"
+        MinHeight="420" MinWidth="800"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFont}" FontSize="14"
+        ResizeMode="CanResize" ShowInTaskbar="False">
+    <DockPanel LastChildFill="True" Margin="16">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <TextBlock Text="Փոփոխություններ" FontSize="20" FontWeight="Bold" Foreground="#1e7145"/>
+            <TextBlock Text="Վերջին 100 խմբագրումները՝ ում մոտ, որ ցուցանիշում, ինչ արժեքից ինչ արժեքի" FontSize="12" Foreground="#5c7a67" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Փակել" Style="{StaticResource ToolbarButtonSecondary}" Click="Close_Click" MinWidth="110"/>
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Top" Text="Փոփոխություններ դեռ չկան" FontSize="14" Foreground="#8fae9b"
+                   HorizontalAlignment="Center" Margin="0,40,0,0">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasChanges}" Value="False">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <DataGrid ItemsSource="{Binding Changes}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserReorderColumns="False"
+                  HeadersVisibility="Column"
+                  SelectionUnit="FullRow">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Undone}" Value="True">
+                            <Setter Property="Opacity" Value="0.55"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Ամսաթիվ" Binding="{Binding ChangedAtDisplay}" Width="110"/>
+                <DataGridTextColumn Header="Տուն" Binding="{Binding HouseName}" Width="1.3*"/>
+                <DataGridTextColumn Header="Բնակիչ" Binding="{Binding ResidentName}" Width="1.4*"/>
+                <DataGridTextColumn Header="Ցուցանիշ" Binding="{Binding ColumnLabel}" Width="1.1*"/>
+                <DataGridTextColumn Header="Հին արժեք" Binding="{Binding OldValueDisplay}" Width="0.9*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Background" Value="#f8d7da"/>
+                            <Setter Property="Foreground" Value="#842029"/>
+                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                            <Setter Property="Padding" Value="6,2"/>
+                            <Setter Property="TextAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Նոր արժեք" Binding="{Binding NewValueDisplay}" Width="0.9*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Background" Value="#d1e7dd"/>
+                            <Setter Property="Foreground" Value="#0f5132"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Padding" Value="6,2"/>
+                            <Setter Property="TextAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="Կարգավիճակ" Width="0.9*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#d1e7dd"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Undone}" Value="True">
+                                                <Setter Property="Background" Value="#e2e3e5"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="Bold"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="" Width="130">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="↺  Հետարկել"
+                                    Command="{Binding DataContext.UndoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource ToolbarButtonWarning}">
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="8,4"/>
+                                        <Setter Property="Margin" Value="2"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Undone}" Value="True">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                                <Setter Property="Content" Value="Հետարկված է"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>

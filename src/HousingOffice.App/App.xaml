@@ -6,13 +6,18 @@
         <ResourceDictionary>
             <FontFamily x:Key="AppFont">Segoe UI, Arial Unicode MS, Sylfaen</FontFamily>
 
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#2f7d52"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#cfe8da"/>
+            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="Black"/>
+
             <Style TargetType="Button" x:Key="ToolbarButton">
                 <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Padding" Value="14,8"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
                 <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Background" Value="#0d6efd"/>
+                <Setter Property="Background" Value="#1e7145"/>
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Template">
@@ -26,16 +31,16 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#0b5ed7"/>
+                        <Setter Property="Background" Value="#175a37"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
 
             <Style TargetType="Button" x:Key="ToolbarButtonSecondary" BasedOn="{StaticResource ToolbarButton}">
-                <Setter Property="Background" Value="#6c757d"/>
+                <Setter Property="Background" Value="#6b9c54"/>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#5c636a"/>
+                        <Setter Property="Background" Value="#57823f"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -49,13 +54,27 @@
                 </Style.Triggers>
             </Style>
 
+            <Style TargetType="Button" x:Key="ToolbarButtonWarning" BasedOn="{StaticResource ToolbarButton}">
+                <Setter Property="Background" Value="#e0a800"/>
+                <Setter Property="Foreground" Value="#3d3000"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#c69500"/>
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#d8d8d8"/>
+                        <Setter Property="Foreground" Value="#8a8a8a"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
             <Style TargetType="Button" x:Key="QuietIconButton">
                 <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Padding" Value="6,3"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Foreground" Value="#adb5bd"/>
+                <Setter Property="Foreground" Value="#7fa38c"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Template">
                     <Setter.Value>
@@ -68,8 +87,8 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#dee2e6"/>
-                        <Setter Property="Foreground" Value="#495057"/>
+                        <Setter Property="Background" Value="#d9e8de"/>
+                        <Setter Property="Foreground" Value="#175a37"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -78,7 +97,7 @@
                 <Setter Property="Padding" Value="8,6"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
-                <Setter Property="BorderBrush" Value="#dee2e6"/>
+                <Setter Property="BorderBrush" Value="#c7dbcd"/>
             </Style>
 
             <Style TargetType="DataGrid">
@@ -87,9 +106,9 @@
                 <Setter Property="HeadersVisibility" Value="Column"/>
                 <Setter Property="GridLinesVisibility" Value="All"/>
                 <Setter Property="RowHeight" Value="30"/>
-                <Setter Property="AlternatingRowBackground" Value="#f8f9fa"/>
-                <Setter Property="HorizontalGridLinesBrush" Value="#dee2e6"/>
-                <Setter Property="VerticalGridLinesBrush" Value="#dee2e6"/>
+                <Setter Property="AlternatingRowBackground" Value="#f3f8f4"/>
+                <Setter Property="HorizontalGridLinesBrush" Value="#c7dbcd"/>
+                <Setter Property="VerticalGridLinesBrush" Value="#c7dbcd"/>
                 <Setter Property="RowHeaderWidth" Value="0"/>
             </Style>
 
@@ -97,10 +116,10 @@
                 <Setter Property="FontFamily" Value="{StaticResource AppFont}"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="FontSize" Value="13"/>
-                <Setter Property="Background" Value="#e9ecef"/>
+                <Setter Property="Background" Value="#dcebe1"/>
                 <Setter Property="Padding" Value="8,6"/>
                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                <Setter Property="BorderBrush" Value="#dee2e6"/>
+                <Setter Property="BorderBrush" Value="#c7dbcd"/>
                 <Setter Property="BorderThickness" Value="0,0,1,1"/>
             </Style>
         </ResourceDictionary>

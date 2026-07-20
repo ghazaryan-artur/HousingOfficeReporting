@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using HousingOffice.Models;
 
@@ -9,36 +10,39 @@ public partial class ResidentRowViewModel : ObservableObject
     public Resident Model { get; }
     private readonly Func<int> _currentMonth;
     private readonly Action<ResidentRowViewModel> _onEdited;
+    private readonly Action<ResidentRowViewModel, string, string?, string?>? _onFieldChanged;
 
-    public ResidentRowViewModel(Resident model, Func<int> currentMonth, Action<ResidentRowViewModel> onEdited)
+    public ResidentRowViewModel(Resident model, Func<int> currentMonth, Action<ResidentRowViewModel> onEdited,
+        Action<ResidentRowViewModel, string, string?, string?>? onFieldChanged = null)
     {
         Model = model;
         _currentMonth = currentMonth;
         _onEdited = onEdited;
+        _onFieldChanged = onFieldChanged;
     }
 
     public long Id => Model.Id;
-    public int RowNumber { get => Model.RowNumber; set => SetProp(v => Model.RowNumber = v, value); }
+    public int RowNumber { get => Model.RowNumber; set => SetProp(v => Model.RowNumber = v, value, Model.RowNumber); }
 
     public string FullName
     {
         get => Model.FullName;
-        set => SetProp(v => Model.FullName = v ?? "", value ?? "");
+        set => SetProp(v => Model.FullName = v ?? "", value ?? "", Model.FullName);
     }
 
     public string? ShareRaw
     {
         get => Model.ShareRaw;
-        set => SetProp(v => Model.ShareRaw = v, value);
+        set => SetProp(v => Model.ShareRaw = v, value, Model.ShareRaw);
     }
 
-    public double? SquareMeters { get => Model.SquareMeters; set => SetProp(v => Model.SquareMeters = v, value); }
-    public double DebitDebt { get => Model.DebitDebt; set => SetProp(v => Model.DebitDebt = v, value); }
-    public double CreditDebt { get => Model.CreditDebt; set => SetProp(v => Model.CreditDebt = v, value); }
-    public double MonthlyCharge { get => Model.MonthlyCharge; set { SetProp(v => Model.MonthlyCharge = v, value); OnPropertyChanged(nameof(FinalBalance)); } }
-    public double DiscountAmount { get => Model.DiscountAmount; set { SetProp(v => Model.DiscountAmount = v, value); OnPropertyChanged(nameof(FinalBalance)); } }
+    public double? SquareMeters { get => Model.SquareMeters; set => SetProp(v => Model.SquareMeters = v, value, Model.SquareMeters); }
+    public double DebitDebt { get => Model.DebitDebt; set => SetProp(v => Model.DebitDebt = v, value, Model.DebitDebt); }
+    public double CreditDebt { get => Model.CreditDebt; set => SetProp(v => Model.CreditDebt = v, value, Model.CreditDebt); }
+    public double MonthlyCharge { get => Model.MonthlyCharge; set { SetProp(v => Model.MonthlyCharge = v, value, Model.MonthlyCharge); OnPropertyChanged(nameof(FinalBalance)); } }
+    public double DiscountAmount { get => Model.DiscountAmount; set { SetProp(v => Model.DiscountAmount = v, value, Model.DiscountAmount); OnPropertyChanged(nameof(FinalBalance)); } }
 
-    public string? Note { get => Model.Note; set => SetProp(v => Model.Note = v, value); }
+    public string? Note { get => Model.Note; set => SetProp(v => Model.Note = v, value, Model.Note); }
 
     public double P1 { get => Model.Payments[0]; set => SetPayment(0, value); }
     public double P2 { get => Model.Payments[1]; set => SetPayment(1, value); }
@@ -59,19 +63,32 @@ public partial class ResidentRowViewModel : ObservableObject
     private void SetPayment(int idx, double value)
     {
         if (Math.Abs(Model.Payments[idx] - value) < 1e-9) return;
+        var old = Model.Payments[idx];
         Model.Payments[idx] = value;
         OnPropertyChanged($"P{idx + 1}");
         OnPropertyChanged(nameof(PaidTotal));
         OnPropertyChanged(nameof(FinalBalance));
+        _onFieldChanged?.Invoke(this, $"P{idx + 1}", old.ToString(CultureInfo.InvariantCulture), value.ToString(CultureInfo.InvariantCulture));
         _onEdited(this);
     }
 
-    private void SetProp<T>(Action<T> setter, T value, [System.Runtime.CompilerServices.CallerMemberName] string? prop = null)
+    private void SetProp<T>(Action<T> setter, T value, T oldValue, [System.Runtime.CompilerServices.CallerMemberName] string? prop = null)
     {
         setter(value);
         OnPropertyChanged(prop);
+        if (_onFieldChanged != null && !Equals(oldValue, value))
+            _onFieldChanged(this, prop!, FormatValue(oldValue), FormatValue(value));
         _onEdited(this);
     }
+
+    private static string? FormatValue<T>(T value) => value switch
+    {
+        null => null,
+        double d => d.ToString(CultureInfo.InvariantCulture),
+        int i => i.ToString(CultureInfo.InvariantCulture),
+        string s => s,
+        _ => value.ToString(),
+    };
 
     public void RaiseComputed()
     {

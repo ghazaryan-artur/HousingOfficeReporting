@@ -78,6 +78,20 @@ CREATE TABLE IF NOT EXISTS residents (
     p12 REAL NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number);
+CREATE TABLE IF NOT EXISTS change_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    resident_id INTEGER NOT NULL,
+    house_id INTEGER NOT NULL,
+    resident_name TEXT NOT NULL,
+    house_name TEXT NOT NULL,
+    column_key TEXT NOT NULL,
+    column_label TEXT NOT NULL,
+    old_value TEXT,
+    new_value TEXT,
+    changed_at TEXT NOT NULL,
+    undone INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS ix_change_log_time ON change_log(id DESC);
 ";
         cmd.ExecuteNonQuery();
 
@@ -242,6 +256,115 @@ CREATE INDEX IF NOT EXISTS ix_residents_house ON residents(house_id, row_number)
         cmd.Parameters.AddWithValue("$note", (object?)r.Note ?? System.DBNull.Value);
         cmd.ExecuteNonQuery();
     }
+
+    public void LogChange(long residentId, long houseId, string residentName, string houseName,
+        string columnKey, string columnLabel, string? oldValue, string? newValue)
+    {
+        using var c = Open();
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = @"INSERT INTO change_log
+                                    (resident_id, house_id, resident_name, house_name, column_key, column_label, old_value, new_value, changed_at, undone)
+                                VALUES
+                                    ($rid, $hid, $rn, $hn, $ck, $cl, $ov, $nv, $ts, 0)";
+            cmd.Parameters.AddWithValue("$rid", residentId);
+            cmd.Parameters.AddWithValue("$hid", houseId);
+            cmd.Parameters.AddWithValue("$rn", residentName);
+            cmd.Parameters.AddWithValue("$hn", houseName);
+            cmd.Parameters.AddWithValue("$ck", columnKey);
+            cmd.Parameters.AddWithValue("$cl", columnLabel);
+            cmd.Parameters.AddWithValue("$ov", (object?)oldValue ?? System.DBNull.Value);
+            cmd.Parameters.AddWithValue("$nv", (object?)newValue ?? System.DBNull.Value);
+            cmd.Parameters.AddWithValue("$ts", System.DateTime.Now.ToString("o", CultureInfo.InvariantCulture));
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var prune = c.CreateCommand())
+        {
+            prune.CommandText = "DELETE FROM change_log WHERE id NOT IN (SELECT id FROM change_log ORDER BY id DESC LIMIT 500)";
+            prune.ExecuteNonQuery();
+        }
+    }
+
+    public List<ChangeLogEntry> ListRecentChanges(int limit = 100)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = @"SELECT id, resident_id, house_id, resident_name, house_name, column_key, column_label, old_value, new_value, changed_at, undone
+                             FROM change_log ORDER BY id DESC LIMIT $lim";
+        cmd.Parameters.AddWithValue("$lim", limit);
+        var list = new List<ChangeLogEntry>();
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+            list.Add(ReadChangeLogEntry(r));
+        return list;
+    }
+
+    public ChangeLogEntry? UndoChange(long changeLogId)
+    {
+        using var c = Open();
+        ChangeLogEntry? entry = null;
+        using (var sel = c.CreateCommand())
+        {
+            sel.CommandText = @"SELECT id, resident_id, house_id, resident_name, house_name, column_key, column_label, old_value, new_value, changed_at, undone
+                                 FROM change_log WHERE id=$id";
+            sel.Parameters.AddWithValue("$id", changeLogId);
+            using var r = sel.ExecuteReader();
+            if (r.Read()) entry = ReadChangeLogEntry(r);
+        }
+        if (entry == null || entry.Undone) return null;
+
+        var column = ResidentColumnSql(entry.ColumnKey);
+        if (column == null) return null;
+
+        using (var upd = c.CreateCommand())
+        {
+            upd.CommandText = $"UPDATE residents SET {column}=$v WHERE id=$id";
+            upd.Parameters.AddWithValue("$v", (object?)entry.OldValue ?? System.DBNull.Value);
+            upd.Parameters.AddWithValue("$id", entry.ResidentId);
+            if (upd.ExecuteNonQuery() == 0) return null;
+        }
+        using (var mark = c.CreateCommand())
+        {
+            mark.CommandText = "UPDATE change_log SET undone=1 WHERE id=$id";
+            mark.Parameters.AddWithValue("$id", changeLogId);
+            mark.ExecuteNonQuery();
+        }
+        entry.Undone = true;
+        return entry;
+    }
+
+    private static string? ResidentColumnSql(string columnKey) => columnKey switch
+    {
+        "RowNumber" => "row_number",
+        "FullName" => "full_name",
+        "ShareRaw" => "share_raw",
+        "SquareMeters" => "square_meters",
+        "DebitDebt" => "debit_debt",
+        "CreditDebt" => "credit_debt",
+        "MonthlyCharge" => "monthly_charge",
+        "DiscountAmount" => "discount_amount",
+        "Note" => "note",
+        "P1" => "p1", "P2" => "p2", "P3" => "p3", "P4" => "p4",
+        "P5" => "p5", "P6" => "p6", "P7" => "p7", "P8" => "p8",
+        "P9" => "p9", "P10" => "p10", "P11" => "p11", "P12" => "p12",
+        _ => null,
+    };
+
+    private static ChangeLogEntry ReadChangeLogEntry(SqliteDataReader r) => new()
+    {
+        Id = r.GetInt64(0),
+        ResidentId = r.GetInt64(1),
+        HouseId = r.GetInt64(2),
+        ResidentName = r.GetString(3),
+        HouseName = r.GetString(4),
+        ColumnKey = r.GetString(5),
+        ColumnLabel = r.GetString(6),
+        OldValue = r.IsDBNull(7) ? null : r.GetString(7),
+        NewValue = r.IsDBNull(8) ? null : r.GetString(8),
+        ChangedAt = System.DateTime.Parse(r.GetString(9), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+        Undone = r.GetInt64(10) != 0,
+    };
 
     public void BulkImport(IEnumerable<(House house, List<Resident> residents)> data, int currentMonth)
     {
